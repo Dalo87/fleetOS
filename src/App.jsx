@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { supabase } from './lib/supabase'
 import Dashboard from './pages/Dashboard'
 import Flota from './pages/Flota'
 import Alertas from './pages/Alertas'
 import Incidencias from './pages/Incidencias'
 import Talleres from './pages/Talleres'
 import Gastos from './pages/Gastos'
+import Login from './pages/Login'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: <GridIcon /> },
@@ -17,8 +19,25 @@ const NAV = [
 ]
 
 export default function App() {
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+  }
 
   const pageTitle = {
     '/': 'Dashboard',
@@ -28,6 +47,14 @@ export default function App() {
     '/talleres': 'Talleres',
     '/gastos': 'Gastos e historial',
   }[location.pathname] || 'FleetCaprichos'
+
+  if (loading) return (
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 13 }}>
+      Cargando...
+    </div>
+  )
+
+  if (!session) return <Login />
 
   return (
     <div className="app">
@@ -59,6 +86,19 @@ export default function App() {
             </NavLink>
           ))}
         </nav>
+        <div style={{ padding: '12px 8px', borderTop: '0.5px solid var(--border)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', padding: '4px 10px', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {session.user.email}
+          </div>
+          <button className="nav-item" onClick={handleLogout} style={{ color: 'var(--red)', width: '100%' }}>
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" width="16" height="16">
+              <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>
+              <path d="M10 11l3-3-3-3"/>
+              <path d="M13 8H6"/>
+            </svg>
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
 
       <div className="main">
