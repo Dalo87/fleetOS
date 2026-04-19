@@ -27,7 +27,7 @@ export default function App() {
     '/incidencias': 'Incidencias',
     '/talleres': 'Talleres',
     '/gastos': 'Gastos e historial',
-  }[location.pathname] || 'FleetOS'
+  }[location.pathname] || 'FleetCaprichos'
 
   return (
     <div className="app">
@@ -43,7 +43,7 @@ export default function App() {
               <circle cx="12" cy="12" r="1.5" fill="#1a1a1a"/>
             </svg>
           </div>
-          FleetOS
+          FleetCaprichos
         </div>
         <nav className="sidebar-nav">
           {NAV.map(({ to, label, icon }) => (
